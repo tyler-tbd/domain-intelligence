@@ -19,8 +19,8 @@ When the user uploads a CSV or XLSX:
 Apply these rules in order. Stronger evidence overrides weaker evidence.
 
 1. **Exact reviewed override:** Use the corrected classification in `domain_feedback_master.csv`.
-2. **For sale:** A recognized marketplace redirect, sale-oriented URL, or explicit sale language is direct evidence. This overrides a generic cross-domain redirect or active-page signal.
-3. **Likely for sale:** Use for a non-marketplace cross-domain redirect, a sparse coming-soon page, or a parked page when no direct sale evidence exists.
+2. **For sale:** An affirmative marketplace listing, listed purchase price, buy-now CTA, make-offer CTA, sale-oriented URL, or explicit “this domain is for sale” language is direct evidence. This overrides a generic cross-domain redirect or active-page signal.
+3. **Likely for sale:** Use for tentative brokered-availability language, a non-marketplace cross-domain redirect, a sparse coming-soon page, or a parked page when no direct sale evidence exists. Afternic/GoDaddy wording such as “may still be available,” “Get this domain,” “contact a broker,” or “inquire about this domain” belongs here unless stronger affirmative sale evidence is also present.
 4. **Not for sale:** Use for a clearly active operating company, product, publication, application, institution, or service with meaningful current-use signals.
 5. **Check manually:** Use when collection failed, evidence is insufficient or conflicting, redirects are incomplete, or a blocked/error page prevents a reasonable decision.
 
@@ -39,6 +39,8 @@ Give evidence this weight, from strongest to weakest:
 7. DNS or HTTP status alone
 
 Treat `backend_classification`, `backend_confidence`, and `backend_evidence` only as a deterministic second opinion. Never let them override stronger structured evidence.
+
+Rendered or browser-like marketplace evidence overrides a generic HTTP 200 response, empty initial HTML, zero visible words, and the absence of a cross-domain redirect.
 
 ## Confidence
 
