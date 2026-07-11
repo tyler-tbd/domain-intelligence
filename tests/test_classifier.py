@@ -1,4 +1,5 @@
 from app.classifier import classify
+from app.evidence_collector import fetch_redirect_chain
 from app.models import RawEvidence
 
 def raw(**kwargs):
@@ -109,6 +110,7 @@ def test_response_contains_all_structured_evidence_arrays():
         "sale_marketplace_hits": ["sedo"],
         "sale_url_hits": ["make-offer"],
         "explicit_sale_phrase_hits": ["buy this domain"],
+        "broker_inquiry_hits": [],
     }
     company = {
         "parking_hits": ["related searches"],
@@ -125,3 +127,60 @@ def test_response_contains_all_structured_evidence_arrays():
     assert result.placeholder_hits == ["coming soon"]
     assert result.active_site_hits == ["pricing"]
     assert result.fetch_error == "blocked"
+
+def test_tentative_broker_lander_is_likely_for_sale():
+    r = raw(
+        name="Withstand",
+        domain="withstand.com",
+        page_title="withstand.com",
+        visible_text_sample=(
+            "GoDaddy withstand.com This domain is registered, but may still "
+            "be available. Get this domain. Powered by Afternic."
+        ),
+        visible_word_count=18,
+        sparse_content=True,
+    )
+    market = {
+        "sale_marketplace_hits": ["afternic", "godaddy"],
+        "sale_url_hits": [],
+        "explicit_sale_phrase_hits": [],
+        "broker_inquiry_hits": ["may still be available", "get this domain"],
+    }
+    company = {
+        "parking_hits": [],
+        "placeholder_hits": [],
+        "active_site_hits": [],
+    }
+
+    result = classify(r, market, company)
+
+    assert result.backend_classification == "likely for sale"
+    assert result.backend_confidence == "high"
+    assert result.broker_inquiry_hits == [
+        "may still be available",
+        "get this domain",
+    ]
+
+def test_javascript_lander_redirect_is_followed():
+    class Response:
+        def __init__(self, status_code, text, headers=None):
+            self.status_code = status_code
+            self.text = text
+            self.headers = headers or {}
+
+    class Session:
+        def get(self, url, **kwargs):
+            if url == "https://withstand.com":
+                return Response(
+                    200,
+                    '<script>window.onload=function(){window.location.href="/lander"}</script>',
+                )
+            return Response(200, "Get this domain. Powered by Afternic.")
+
+    response, chain, error = fetch_redirect_chain(
+        Session(), "https://withstand.com", 1
+    )
+
+    assert error == ""
+    assert response.status_code == 200
+    assert chain == ["https://withstand.com", "https://withstand.com/lander"]
