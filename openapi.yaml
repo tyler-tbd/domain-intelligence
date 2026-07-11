@@ -62,6 +62,7 @@ components:
         - sale_marketplace_hits
         - sale_url_hits
         - explicit_sale_phrase_hits
+        - broker_inquiry_hits
         - parking_hits
         - placeholder_hits
         - active_site_hits
@@ -102,6 +103,10 @@ components:
         explicit_sale_phrase_hits:
           type: array
           description: Direct domain-sale phrases found in visible page evidence.
+          items: {type: string}
+        broker_inquiry_hits:
+          type: array
+          description: Tentative broker or acquisition-inquiry language that suggests availability without confirming a sale listing.
           items: {type: string}
         parking_hits:
           type: array
