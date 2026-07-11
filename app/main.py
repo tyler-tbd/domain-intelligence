@@ -63,6 +63,7 @@ def investigate(
                     sale_marketplace_hits=[],
                     sale_url_hits=[],
                     explicit_sale_phrase_hits=[],
+                    broker_inquiry_hits=[],
                     parking_hits=[],
                     placeholder_hits=[],
                     active_site_hits=[],
