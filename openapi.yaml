@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Domain Intelligence API
+  version: 1.0.0
+servers:
+  - url: https://YOUR-SERVICE.onrender.com
+paths:
+  /investigate:
+    post:
+      operationId: investigateDomains
+      summary: Investigate candidate dot-com domains
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [names]
+              properties:
+                names:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Domain investigation results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvestigationResult"
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    InvestigationResult:
+      type: object
+      properties:
+        name: {type: string}
+        domain: {type: string}
+        classification: {type: string}
+        confidence: {type: string}
+        evidence:
+          type: array
+          items: {type: string}
+        dns_resolves: {type: boolean}
+        http_status:
+          type: [integer, "null"]
+        final_url: {type: string}
+        redirect_chain:
+          type: array
+          items: {type: string}
+        page_title: {type: string}
+        meta_description: {type: string}
+        visible_word_count: {type: integer}
+        sparse_content: {type: boolean}
