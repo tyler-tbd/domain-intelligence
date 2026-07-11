@@ -11,7 +11,7 @@ API
  ├── Evidence Collector
  ├── Marketplace Detector
  ├── Company-Use Detector
- ├── Classifier
+ ├── Advisory Classifier
  ├── Feedback Store
  └── Regression Tests
 ```
@@ -39,9 +39,13 @@ Output:
 - explicit sale phrases
 - sparse/coming-soon/parking evidence
 - operating-company evidence
-- suggested classification
-- confidence
-- explanation
+- structured marketplace, parking, placeholder, and active-use signal arrays
+- advisory backend classification and confidence
+- fetch errors and collection metadata
+
+The `backend_classification`, `backend_confidence`, and `backend_evidence`
+fields are deterministic suggestions only. The custom GPT makes the final
+classification from the structured evidence and its instruction rubric.
 
 ## Classification options
 
