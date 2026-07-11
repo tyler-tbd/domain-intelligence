@@ -10,6 +10,16 @@ def classify(raw: RawEvidence, market: dict, company: dict) -> InvestigationResu
         confidence = "high"
         evidence.append("Exact reviewed-domain override applied.")
     elif (
+        market.get("broker_inquiry_hits", [])
+        and not market["explicit_sale_phrase_hits"]
+    ):
+        classification = "likely for sale"
+        confidence = "high" if market["sale_marketplace_hits"] else "medium"
+        evidence.append(
+            "Brokered acquisition inquiry detected: "
+            + ", ".join(market.get("broker_inquiry_hits", [])[:5])
+        )
+    elif (
         market["sale_marketplace_hits"]
         or market["sale_url_hits"]
         or market["explicit_sale_phrase_hits"]
@@ -83,6 +93,7 @@ def classify(raw: RawEvidence, market: dict, company: dict) -> InvestigationResu
         sale_marketplace_hits=market["sale_marketplace_hits"],
         sale_url_hits=market["sale_url_hits"],
         explicit_sale_phrase_hits=market["explicit_sale_phrase_hits"],
+        broker_inquiry_hits=market.get("broker_inquiry_hits", []),
         parking_hits=company["parking_hits"],
         placeholder_hits=company["placeholder_hits"],
         active_site_hits=company["active_site_hits"],
