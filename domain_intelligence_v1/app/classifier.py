@@ -1,0 +1,84 @@
+from .models import InvestigationResult, RawEvidence
+from .feedback_store import load_overrides
+
+def classify(raw: RawEvidence, market: dict, company: dict) -> InvestigationResult:
+    evidence = []
+    overrides = load_overrides()
+
+    if raw.domain.lower() in overrides:
+        classification = overrides[raw.domain.lower()]
+        confidence = "high"
+        evidence.append("Exact reviewed-domain override applied.")
+    elif (
+        market["sale_marketplace_hits"]
+        or market["sale_url_hits"]
+        or market["explicit_sale_phrase_hits"]
+    ):
+        classification = "for sale"
+        confidence = "high"
+        if market["sale_marketplace_hits"]:
+            evidence.append(
+                "Marketplace detected: "
+                + ", ".join(market["sale_marketplace_hits"][:5])
+            )
+        if market["sale_url_hits"]:
+            evidence.append(
+                "Sale URL pattern detected: "
+                + ", ".join(market["sale_url_hits"][:5])
+            )
+        if market["explicit_sale_phrase_hits"]:
+            evidence.append(
+                "Explicit sale language detected: "
+                + ", ".join(market["explicit_sale_phrase_hits"][:5])
+            )
+    elif raw.redirects_to_different_root:
+        classification = "likely for sale"
+        confidence = "medium"
+        evidence.append(
+            f"Redirects to different root domain: {raw.destination_root_domain}"
+        )
+    elif company["placeholder_hits"] and raw.sparse_content:
+        classification = "likely for sale"
+        confidence = "medium"
+        evidence.append("Sparse placeholder/coming-soon page detected.")
+    elif company["parking_hits"]:
+        classification = "likely for sale"
+        confidence = "medium"
+        evidence.append(
+            "Parking signals detected: "
+            + ", ".join(company["parking_hits"][:5])
+        )
+    elif len(company["active_site_hits"]) >= 3 and raw.visible_word_count >= 120:
+        classification = "not for sale"
+        confidence = "medium"
+        evidence.append(
+            "Strong operating-company signals: "
+            + ", ".join(company["active_site_hits"][:8])
+        )
+    else:
+        classification = "check manually"
+        confidence = "low" if raw.fetch_error else "medium"
+        evidence.append("Automated evidence is incomplete or ambiguous.")
+
+    if raw.final_url:
+        evidence.append(f"Final URL: {raw.final_url}")
+    if raw.page_title:
+        evidence.append(f"Title: {raw.page_title}")
+    if raw.fetch_error:
+        evidence.append(f"Fetch error: {raw.fetch_error}")
+
+    return InvestigationResult(
+        name=raw.name,
+        domain=raw.domain,
+        classification=classification,
+        confidence=confidence,
+        evidence=evidence,
+        dns_resolves=raw.dns_resolves,
+        http_status=raw.http_status,
+        final_url=raw.final_url,
+        redirect_chain=raw.redirect_chain,
+        page_title=raw.page_title,
+        meta_description=raw.meta_description,
+        visible_word_count=raw.visible_word_count,
+        sparse_content=raw.sparse_content,
+    )
