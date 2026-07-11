@@ -3,7 +3,7 @@ info:
   title: Domain Intelligence API
   version: 1.0.0
 servers:
-  - url: https://YOUR-SERVICE.onrender.com
+  - url: https://domain-intelligence-tg9q.onrender.com
 paths:
   /investigate:
     post:
