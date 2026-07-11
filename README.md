@@ -39,7 +39,7 @@ Output:
 - explicit sale phrases
 - sparse/coming-soon/parking evidence
 - operating-company evidence
-- structured marketplace, parking, placeholder, and active-use signal arrays
+- structured marketplace, broker-inquiry, parking, placeholder, and active-use signal arrays
 - advisory backend classification and confidence
 - fetch errors and collection metadata
 
