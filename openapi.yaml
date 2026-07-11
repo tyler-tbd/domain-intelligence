@@ -10,7 +10,7 @@ paths:
       operationId: investigateDomains
       summary: Investigate candidate dot-com domains
       security:
-        - ApiKeyAuth: [184d410173fa277569691d4c07ffa5df]
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
