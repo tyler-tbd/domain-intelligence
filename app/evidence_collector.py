@@ -1,6 +1,6 @@
 import socket
 import re
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import dns.resolver
 import requests
@@ -70,6 +70,8 @@ def fetch_redirect_chain(session, start_url: str, timeout: float):
             break
 
         next_url = urljoin(current, location)
+        if urlparse(next_url).scheme not in {"http", "https"}:
+            break
         if next_url in chain:
             break
         current = next_url
