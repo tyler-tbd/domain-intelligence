@@ -41,6 +41,24 @@ def classify(raw: RawEvidence, market: dict, company: dict) -> InvestigationResu
                 "Explicit sale language detected: "
                 + ", ".join(market["explicit_sale_phrase_hits"][:5])
             )
+    elif (
+        not raw.dns_resolves
+        or raw.http_status is None
+        or bool(raw.fetch_error)
+        or raw.visible_word_count <= 10
+    ):
+        classification = "likely for sale"
+        confidence = "low" if (
+            not raw.dns_resolves or raw.http_status is None or raw.fetch_error
+        ) else "medium"
+        if not raw.dns_resolves:
+            evidence.append("Domain does not currently resolve in DNS.")
+        elif raw.http_status is None or raw.fetch_error:
+            evidence.append("Website did not respond or could not be reached.")
+        else:
+            evidence.append(
+                f"Extremely sparse page with {raw.visible_word_count} visible words."
+            )
     elif raw.redirects_to_different_root:
         classification = "likely for sale"
         confidence = "medium"
