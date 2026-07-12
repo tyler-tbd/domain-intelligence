@@ -173,6 +173,9 @@ def collect_evidence(value: str, timeout: float = DEFAULT_TIMEOUT) -> RawEvidenc
         page_title=title,
         meta_description=meta_description,
         visible_text_sample=body_text[:MAX_TEXT_CHARS],
+        html_source_sample=(response.text or "")[:MAX_TEXT_CHARS]
+        if response is not None
+        else "",
         visible_word_count=word_count,
         sparse_content=word_count < 120,
         fetch_error=error[:500],
