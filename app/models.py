@@ -19,6 +19,7 @@ class RawEvidence(BaseModel):
     visible_text_sample: str
     visible_word_count: int
     sparse_content: bool
+    html_source_sample: str = ""
     fetch_error: str = ""
 
 class SignalBundle(BaseModel):
