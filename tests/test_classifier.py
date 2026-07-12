@@ -1,5 +1,6 @@
 from app.classifier import classify
 from app.evidence_collector import fetch_redirect_chain
+from app.marketplace_detector import detect_marketplace_signals
 from app.models import RawEvidence
 
 def raw(**kwargs):
@@ -184,3 +185,44 @@ def test_javascript_lander_redirect_is_followed():
     assert error == ""
     assert response.status_code == 200
     assert chain == ["https://withstand.com", "https://withstand.com/lander"]
+
+def test_non_http_javascript_redirect_is_ignored():
+    class Response:
+        status_code = 200
+        text = '<script>window.location.href="about:blank"</script> All inquires — domain@track.com'
+        headers = {}
+
+    class Session:
+        def get(self, url, **kwargs):
+            return Response()
+
+    response, chain, error = fetch_redirect_chain(
+        Session(), "https://track.com", 1
+    )
+
+    assert error == ""
+    assert response.status_code == 200
+    assert chain == ["https://track.com"]
+
+def test_sparse_same_domain_inquiry_email_is_broker_signal():
+    r = raw(
+        name="Track",
+        domain="track.com",
+        page_title="track.com Domain Name",
+        meta_description="track.com domain name",
+        visible_text_sample="All inquires — domain@track.com",
+        visible_word_count=4,
+        sparse_content=True,
+    )
+
+    market = detect_marketplace_signals(r)
+    company = {
+        "parking_hits": [],
+        "placeholder_hits": [],
+        "active_site_hits": [],
+    }
+    result = classify(r, market, company)
+
+    assert result.backend_classification == "likely for sale"
+    assert "all inquires" in result.broker_inquiry_hits
+    assert "domain@track.com" in result.broker_inquiry_hits
