@@ -1,6 +1,7 @@
 from app.classifier import classify
 from app.evidence_collector import fetch_redirect_chain
 from app.marketplace_detector import detect_marketplace_signals
+from app.company_use_detector import detect_company_use
 from app.models import RawEvidence
 
 def raw(**kwargs):
@@ -226,3 +227,29 @@ def test_sparse_same_domain_inquiry_email_is_broker_signal():
     assert result.backend_classification == "likely for sale"
     assert "all inquires" in result.broker_inquiry_hits
     assert "domain@track.com" in result.broker_inquiry_hits
+
+def test_godaddy_parking_bundle_is_likely_for_sale():
+    r = raw(
+        name="Acetrack",
+        domain="acetrack.com",
+        final_url="https://acetrack.com/lander",
+        redirect_chain=["https://acetrack.com", "https://acetrack.com/lander"],
+        html_source_sample=(
+            '<script>window._trfd.push({ap:"parking"})</script>'
+            '<script src="https://img1.wsimg.com/parking-lander/static/js/main.js"></script>'
+        ),
+        visible_word_count=0,
+        sparse_content=True,
+    )
+    market = {
+        "sale_marketplace_hits": [],
+        "sale_url_hits": [],
+        "explicit_sale_phrase_hits": [],
+        "broker_inquiry_hits": [],
+    }
+    company = detect_company_use(r)
+
+    result = classify(r, market, company)
+
+    assert result.backend_classification == "likely for sale"
+    assert "parking-lander" in result.parking_hits
