@@ -1,14 +1,14 @@
 openapi: 3.1.0
 info:
   title: Domain Intelligence API
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: https://domain-intelligence-tg9q.onrender.com
 paths:
   /investigate:
     post:
       operationId: investigateDomains
-      summary: Investigate candidate dot-com domains
+      summary: Collect acquisition evidence for candidate dot-com domains
       security:
         - ApiKeyAuth: []
       requestBody:
@@ -23,11 +23,14 @@ paths:
                   type: array
                   minItems: 1
                   maxItems: 100
+                  description: Candidate names or domains to investigate; names without a suffix are checked as dot-com domains.
                   items:
                     type: string
+            example:
+              names: [Resolve, Harbor, Courseback]
       responses:
         "200":
-          description: Domain investigation results
+          description: Structured domain evidence plus a nonbinding backend classification.
           content:
             application/json:
               schema:
@@ -43,22 +46,82 @@ components:
   schemas:
     InvestigationResult:
       type: object
+      required:
+        - name
+        - domain
+        - backend_classification
+        - backend_confidence
+        - backend_evidence
+        - dns_resolves
+        - http_status
+        - starting_url
+        - final_url
+        - redirect_chain
+        - redirects_to_different_root
+        - destination_root_domain
+        - sale_marketplace_hits
+        - sale_url_hits
+        - explicit_sale_phrase_hits
+        - broker_inquiry_hits
+        - parking_hits
+        - placeholder_hits
+        - active_site_hits
+        - page_title
+        - meta_description
+        - visible_word_count
+        - sparse_content
+        - fetch_error
       properties:
-        name: {type: string}
-        domain: {type: string}
-        classification: {type: string}
-        confidence: {type: string}
-        evidence:
+        name: {type: string, description: Original candidate name supplied by the caller.}
+        domain: {type: string, description: Normalized dot-com domain investigated by the backend.}
+        backend_classification: {type: string, description: Advisory deterministic classification; the GPT must make the final decision.}
+        backend_confidence: {type: string, description: Confidence in the advisory backend classification.}
+        backend_evidence:
           type: array
+          description: Concise explanation of the deterministic backend suggestion.
           items: {type: string}
-        dns_resolves: {type: boolean}
+        dns_resolves: {type: boolean, description: Whether DNS resolution succeeded.}
         http_status:
           type: [integer, "null"]
-        final_url: {type: string}
+          description: Last HTTP status observed, or null when no response was received.
+        starting_url: {type: string, description: Initial URL used for the successful or final fetch attempt.}
+        final_url: {type: string, description: Last URL in the observed redirect chain.}
         redirect_chain:
           type: array
+          description: Ordered URLs visited while following redirects.
           items: {type: string}
-        page_title: {type: string}
-        meta_description: {type: string}
-        visible_word_count: {type: integer}
-        sparse_content: {type: boolean}
+        redirects_to_different_root: {type: boolean, description: Whether the destination uses a different registrable root domain.}
+        destination_root_domain: {type: string, description: Registrable root domain of the final URL.}
+        sale_marketplace_hits:
+          type: array
+          description: Recognized domain marketplace names found in URLs or page content.
+          items: {type: string}
+        sale_url_hits:
+          type: array
+          description: Sale-oriented URL patterns found in the redirect chain or final URL.
+          items: {type: string}
+        explicit_sale_phrase_hits:
+          type: array
+          description: Direct domain-sale phrases found in visible page evidence.
+          items: {type: string}
+        broker_inquiry_hits:
+          type: array
+          description: Tentative broker or acquisition-inquiry language that suggests availability without confirming a sale listing.
+          items: {type: string}
+        parking_hits:
+          type: array
+          description: Signals associated with parked or sponsored-link pages.
+          items: {type: string}
+        placeholder_hits:
+          type: array
+          description: Coming-soon, under-construction, or default-page signals.
+          items: {type: string}
+        active_site_hits:
+          type: array
+          description: Product, company, commerce, documentation, or support signals indicating active use.
+          items: {type: string}
+        page_title: {type: string, description: Parsed HTML page title.}
+        meta_description: {type: string, description: Parsed HTML meta description.}
+        visible_word_count: {type: integer, description: Approximate visible page word count.}
+        sparse_content: {type: boolean, description: Whether visible content contains fewer than 120 words.}
+        fetch_error: {type: string, description: Fetch or parsing error; empty when collection completed normally.}
