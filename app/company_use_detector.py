@@ -3,6 +3,7 @@ from .models import RawEvidence
 PARKING_PHRASES = [
     "related searches", "sponsored listings", "parkingcrew",
     "bodis", "domain parking", "parked free", "parklogic",
+    "parking-lander", 'ap:"parking"', "wsimg.com/parking-lander",
 ]
 
 PLACEHOLDER_PHRASES = [
@@ -29,6 +30,7 @@ def detect_company_use(raw: RawEvidence) -> dict:
             raw.page_title,
             raw.meta_description,
             raw.visible_text_sample,
+            raw.html_source_sample,
         ]
     )
 
