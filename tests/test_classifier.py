@@ -253,3 +253,49 @@ def test_godaddy_parking_bundle_is_likely_for_sale():
 
     assert result.backend_classification == "likely for sale"
     assert "parking-lander" in result.parking_hits
+
+def test_unreachable_domain_is_likely_for_sale():
+    r = raw(
+        domain="ardent.com",
+        dns_resolves=True,
+        http_status=None,
+        visible_word_count=0,
+        fetch_error="Connection timed out",
+    )
+    market = {
+        "sale_marketplace_hits": [],
+        "sale_url_hits": [],
+        "explicit_sale_phrase_hits": [],
+        "broker_inquiry_hits": [],
+    }
+    company = {
+        "parking_hits": [],
+        "placeholder_hits": [],
+        "active_site_hits": [],
+    }
+
+    result = classify(r, market, company)
+
+    assert result.backend_classification == "likely for sale"
+    assert result.backend_confidence == "low"
+
+def test_ten_words_or_fewer_is_likely_unless_directly_for_sale():
+    r = raw(visible_word_count=10, sparse_content=True)
+    market = {
+        "sale_marketplace_hits": [],
+        "sale_url_hits": [],
+        "explicit_sale_phrase_hits": [],
+        "broker_inquiry_hits": [],
+    }
+    company = {
+        "parking_hits": [],
+        "placeholder_hits": [],
+        "active_site_hits": [],
+    }
+
+    result = classify(r, market, company)
+    assert result.backend_classification == "likely for sale"
+
+    market["explicit_sale_phrase_hits"] = ["this domain is for sale"]
+    result = classify(r, market, company)
+    assert result.backend_classification == "for sale"
