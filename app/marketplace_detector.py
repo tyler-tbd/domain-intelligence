@@ -1,3 +1,5 @@
+import re
+
 from .models import RawEvidence
 
 SALE_MARKETPLACES = [
@@ -22,6 +24,7 @@ SALE_PHRASES = [
 BROKER_INQUIRY_PHRASES = [
     "may still be available", "get this domain", "contact our domain broker",
     "inquire about this domain", "domain acquisition inquiry",
+    "all inquiries", "all inquires", "domain inquiries", "domain inquires",
 ]
 
 def find_hits(text: str, patterns: list[str]) -> list[str]:
@@ -40,9 +43,18 @@ def detect_marketplace_signals(raw: RawEvidence) -> dict:
         ]
     )
 
+    broker_hits = find_hits(combined, BROKER_INQUIRY_PHRASES)
+    same_domain_email = re.search(
+        rf"\bdomain\s*@\s*(?:www\.)?{re.escape(raw.domain)}\b",
+        combined,
+        re.IGNORECASE,
+    )
+    if same_domain_email:
+        broker_hits.append(same_domain_email.group(0).replace(" ", "").lower())
+
     return {
         "sale_marketplace_hits": find_hits(combined, SALE_MARKETPLACES),
         "sale_url_hits": find_hits(combined, SALE_URL_HINTS),
         "explicit_sale_phrase_hits": find_hits(combined, SALE_PHRASES),
-        "broker_inquiry_hits": find_hits(combined, BROKER_INQUIRY_PHRASES),
+        "broker_inquiry_hits": list(dict.fromkeys(broker_hits)),
     }
